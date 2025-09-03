@@ -1,4 +1,2 @@
-function sum(a:number, b:number) {
-    return a + b;
-  }
-module.exports = {sum};
+export * from './extractor/SignatureExtractor';
+export * from './Types';
