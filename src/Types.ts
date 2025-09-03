@@ -9,4 +9,5 @@ export interface StreamSignature {
     variance : number; 
     skewness : number;
     entropy : number;
+    fftEntropy : number;
 }

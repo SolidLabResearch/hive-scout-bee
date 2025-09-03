@@ -19,7 +19,8 @@ describe('SignatureExtractor', () => {
                 tripleCount: 0,
                 variance: 0,
                 skewness: 0,
-                entropy: 0
+                entropy: 0,
+                fftEntropy: 0
             });
         });
 
@@ -95,6 +96,7 @@ describe('SignatureExtractor', () => {
             
             expect(result.tripleCount).toBe(3);
             expect(result.variance).toBe(100); // variance of [10, 20, 30]
+            expect(result.fftEntropy).toBeGreaterThan(0); // FFT entropy should be > 0 for varying data
         });
 
         it('should ignore non-numeric literals', () => {
@@ -162,6 +164,7 @@ describe('SignatureExtractor', () => {
             expect(result.variance).toBe(0); // single value has no variance
             expect(result.skewness).toBe(0); // single value has no skewness
             expect(result.entropy).toBe(0); // single predicate has no entropy
+            expect(result.fftEntropy).toBe(0); // single value has no FFT entropy
         });
     });
 
@@ -244,6 +247,7 @@ describe('SignatureExtractor', () => {
             expect(result.variance).toBe(0); // no valid numeric values
             expect(result.skewness).toBe(0);
             expect(result.entropy).toBe(0); // all same predicate
+            expect(result.fftEntropy).toBe(0); // no numeric values for FFT
         });
 
         it('should handle mixed numeric and non-numeric values', () => {
@@ -275,6 +279,26 @@ describe('SignatureExtractor', () => {
             expect(result.tripleCount).toBe(4);
             expect(result.variance).toBeCloseTo(12.5, 5); // variance of [25, 30]
             expect(result.entropy).toBeCloseTo(1.5, 1); // entropy for 3 different predicates
+            expect(result.fftEntropy).toBeGreaterThan(0); // FFT entropy for mixed data
+        });
+
+        it('should calculate FFT entropy correctly for periodic data', () => {
+            const windowData = new Set<Quad>([
+                quad(namedNode('http://example.org/s1'), namedNode('http://example.org/p1'),
+                    literal('1', namedNode('http://www.w3.org/2001/XMLSchema#integer'))),
+                quad(namedNode('http://example.org/s2'), namedNode('http://example.org/p1'),
+                    literal('0', namedNode('http://www.w3.org/2001/XMLSchema#integer'))),
+                quad(namedNode('http://example.org/s3'), namedNode('http://example.org/p1'),
+                    literal('1', namedNode('http://www.w3.org/2001/XMLSchema#integer'))),
+                quad(namedNode('http://example.org/s4'), namedNode('http://example.org/p1'),
+                    literal('0', namedNode('http://www.w3.org/2001/XMLSchema#integer')))
+            ]);
+
+            const result = extractor.extractSignature(windowData);
+            
+            // Periodic pattern [1,0,1,0] should have different FFT characteristics than random data
+            expect(result.fftEntropy).toBeGreaterThan(0);
+            expect(result.fftEntropy).toBeLessThan(3); // Should be less than high-entropy random data
         });
     });
 });

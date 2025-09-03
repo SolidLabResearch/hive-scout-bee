@@ -1,5 +1,6 @@
 import {Quad} from "n3";
 import { StreamSignature } from "../Types";
+const fft = require('fft-js');
 /**
  * It extracts the statistical features from a stream of RDF quads.
  * The class provides methods to compute various statistics such as
@@ -66,12 +67,14 @@ export class SignatureExtractor {
         const variance = this.calculateVariance(numericValues);
         const skewness = this.calculateSkewness(numericValues);
         const entropy = this.calculateEntropy(windowData);
+        const fftEntropy = this.calculateFFTEntropy(numericValues);
 
         return {
             tripleCount,
             variance,
             skewness,
-            entropy
+            entropy,
+            fftEntropy
         };
     }
 
@@ -149,6 +152,54 @@ export class SignatureExtractor {
             }
         }
         
+        return entropy;
+    }
+
+    /**
+     * Calculates the FFT-based entropy of numeric values.
+     * Uses frequency domain analysis to measure information content.
+     * @private
+     * @param {number[]} values - The array of numeric values to analyze.
+     * @return {number} - The calculated FFT entropy.
+     * @memberof SignatureExtractor
+     */
+    private calculateFFTEntropy(values: number[]): number {
+        if (values.length === 0) return 0;
+        if (values.length === 1) return 0;
+
+        // Ensure we have a power of 2 length for FFT efficiency
+        let paddedValues = [...values];
+        const targetLength = Math.pow(2, Math.ceil(Math.log2(values.length)));
+        
+        // Pad with zeros if necessary
+        while (paddedValues.length < targetLength) {
+            paddedValues.push(0);
+        }
+
+        // Apply FFT to get frequency domain representation
+        const fftResult = fft.fft(paddedValues);
+        
+        // Calculate magnitude spectrum
+        const magnitudes: number[] = fftResult.map((complex: number[]) => {
+            const real = complex[0];
+            const imag = complex[1];
+            return Math.sqrt(real * real + imag * imag);
+        });
+
+        // Normalize magnitudes to get probability distribution
+        const totalMagnitude = magnitudes.reduce((sum: number, mag: number) => sum + mag, 0);
+        if (totalMagnitude === 0) return 0;
+
+        const probabilities = magnitudes.map((mag: number) => mag / totalMagnitude);
+
+        // Calculate Shannon entropy of the frequency spectrum
+        let entropy = 0;
+        for (const prob of probabilities) {
+            if (prob > 0) {
+                entropy -= prob * Math.log2(prob);
+            }
+        }
+
         return entropy;
     }
 }

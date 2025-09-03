@@ -1,6 +1,6 @@
 {
     "name": "hive-scout-bee",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "description": "A library to choose the approach adaptively based on the signature of the stream",
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
@@ -51,6 +51,7 @@
         "eslint": "^9.34.0",
         "eslint-plugin-jest": "^29.0.1",
         "eslint-plugin-jsdoc": "^54.3.1",
+        "fft-js": "^0.0.12",
         "n3": "^1.26.0"
     }
 }
