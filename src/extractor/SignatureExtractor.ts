@@ -11,12 +11,13 @@ const fft = require('fft-js');
  */
 export class SignatureExtractor {
 
+    private static highAccuracy: boolean = false;
     /**
      * Creates an instance of SignatureExtractor.
      * @memberof SignatureExtractor
      */
-    constructor(){
-
+    constructor(highAccuracy: boolean = false) {
+        SignatureExtractor.highAccuracy = highAccuracy;
     }
 
     /**
