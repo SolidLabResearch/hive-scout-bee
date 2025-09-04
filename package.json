@@ -1,6 +1,6 @@
 {
     "name": "hive-scout-bee",
-    "version": "1.2.0",
+    "version": "1.2.1",
     "description": "A library to choose the approach adaptively based on the signature of the stream",
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
